@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  subscribe:
+    build: .
+    container_name: newapi-subscribe
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Shanghai
+    restart: unless-stopped
