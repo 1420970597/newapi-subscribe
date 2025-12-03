@@ -9,6 +9,8 @@ interface User {
   status: number
   newapi_bound: number
   newapi_username: string
+  email_remind?: number
+  remind_days?: number
 }
 
 interface AuthState {

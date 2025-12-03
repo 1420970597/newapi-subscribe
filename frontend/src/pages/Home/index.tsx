@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Card, Row, Col, Button, Tag, Spin, message, Modal } from 'antd'
 import { useNavigate } from 'react-router-dom'
-import { planApi, subscriptionApi } from '../../api'
+import { planApi } from '../../api'
 import { useAuthStore } from '../../store/auth'
 
 interface Plan {

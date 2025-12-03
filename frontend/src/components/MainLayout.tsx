@@ -21,7 +21,7 @@ export default function MainLayout() {
       { key: 'usage', label: <Link to="/user/usage">使用统计</Link>, icon: <BarChartOutlined /> },
       { key: 'settings', label: <Link to="/user/settings">账户设置</Link>, icon: <SettingOutlined /> },
       { type: 'divider' as const },
-      ...(user?.role >= 10 ? [{ key: 'admin', label: <Link to="/admin">管理后台</Link>, icon: <SettingOutlined /> }] : []),
+      ...((user?.role ?? 0) >= 10 ? [{ key: 'admin', label: <Link to="/admin">管理后台</Link>, icon: <SettingOutlined /> }] : []),
       { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, onClick: handleLogout },
     ],
   }

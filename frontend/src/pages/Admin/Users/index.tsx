@@ -8,7 +8,6 @@ export default function AdminUsers() {
   const [users, setUsers] = useState<any[]>([])
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 })
   const [keyword, setKeyword] = useState('')
-  const [selectedUser, setSelectedUser] = useState<any>(null)
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [userDetail, setUserDetail] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -37,7 +36,6 @@ export default function AdminUsers() {
   }
 
   const handleViewUser = async (user: any) => {
-    setSelectedUser(user)
     setDrawerVisible(true)
     setDetailLoading(true)
     try {
