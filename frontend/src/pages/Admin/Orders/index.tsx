@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Table, Card, Select, Tag } from 'antd'
+import { Table, Card, Select, Tag, Button, Popconfirm, message, Space } from 'antd'
+import { CheckCircleOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { adminApi } from '../../../api'
 
@@ -15,6 +16,7 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([])
   const [pagination, setPagination] = useState({ current: 1, pageSize: 20, total: 0 })
   const [status, setStatus] = useState<string>('')
+  const [completing, setCompleting] = useState<number | null>(null)
 
   useEffect(() => {
     loadOrders()
@@ -39,6 +41,23 @@ export default function AdminOrders() {
     }
   }
 
+  const handleCompleteOrder = async (orderId: number) => {
+    setCompleting(orderId)
+    try {
+      const res: any = await adminApi.completeOrder(orderId)
+      if (res.success) {
+        message.success('补单成功')
+        loadOrders()
+      } else {
+        message.error(res.message || '补单失败')
+      }
+    } catch (error: any) {
+      message.error(error.message || '补单失败')
+    } finally {
+      setCompleting(null)
+    }
+  }
+
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: '订单号', dataIndex: 'order_no', key: 'order_no' },
@@ -51,6 +70,33 @@ export default function AdminOrders() {
     { title: '状态', dataIndex: 'status', key: 'status', render: (s: string) => <Tag color={statusMap[s]?.color}>{statusMap[s]?.text}</Tag> },
     { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm') },
     { title: '支付时间', dataIndex: 'paid_at', key: 'paid_at', render: (time: string) => time ? dayjs(time).format('YYYY-MM-DD HH:mm') : '-' },
+    {
+      title: '操作',
+      key: 'action',
+      width: 120,
+      render: (_: any, record: any) => (
+        <Space>
+          {record.status === 'pending' && (
+            <Popconfirm
+              title="手动补单"
+              description="确定要将此订单标记为已支付吗？这将激活用户的订阅。"
+              onConfirm={() => handleCompleteOrder(record.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Button
+                type="primary"
+                size="small"
+                icon={<CheckCircleOutlined />}
+                loading={completing === record.id}
+              >
+                补单
+              </Button>
+            </Popconfirm>
+          )}
+        </Space>
+      ),
+    },
   ]
 
   return (

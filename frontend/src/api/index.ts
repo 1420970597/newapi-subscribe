@@ -76,6 +76,7 @@ export const adminApi = {
 
   // 订单
   getOrders: (params?: any) => api.get('/admin/orders', { params }),
+  completeOrder: (id: number) => api.post(`/admin/orders/${id}/complete`),
 
   // 套餐
   createPlan: (data: any) => api.post('/admin/plans', data),

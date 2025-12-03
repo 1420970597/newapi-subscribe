@@ -78,6 +78,7 @@ func SetupRouter() *gin.Engine {
 
 			// 订单管理
 			admin.GET("/orders", controller.AdminGetOrders)
+			admin.POST("/orders/:id/complete", controller.AdminCompleteOrder)
 
 			// 套餐管理
 			admin.POST("/plans", controller.AdminCreatePlan)

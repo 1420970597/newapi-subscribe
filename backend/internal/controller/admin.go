@@ -496,3 +496,46 @@ func AdminGetNewAPIGroups(c *gin.Context) {
 		Data:    groups,
 	})
 }
+
+// AdminCompleteOrder 手动补单
+func AdminCompleteOrder(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Success: false,
+			Message: "无效的订单 ID",
+		})
+		return
+	}
+
+	var order model.Order
+	if err := model.DB.First(&order, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, dto.Response{
+			Success: false,
+			Message: "订单不存在",
+		})
+		return
+	}
+
+	if order.Status != model.OrderStatusPending {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Success: false,
+			Message: "只能补单待支付状态的订单",
+		})
+		return
+	}
+
+	// 手动补单，交易号设为 MANUAL
+	if err := service.CompleteOrder(&order, "MANUAL_"+order.OrderNo); err != nil {
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Success: false,
+			Message: "补单失败: " + err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Message: "补单成功",
+	})
+}

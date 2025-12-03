@@ -1,0 +1,409 @@
+/* 容器 */
+.home-container {
+  position: relative;
+  min-height: calc(100vh - 200px);
+  padding: 40px 20px;
+  overflow: hidden;
+}
+
+/* 加载状态 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* 背景装饰 */
+.bg-decoration {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: float 20s ease-in-out infinite;
+}
+
+.bg-blob-1 {
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  top: -200px;
+  right: -100px;
+  animation-delay: 0s;
+}
+
+.bg-blob-2 {
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  bottom: -150px;
+  left: -100px;
+  animation-delay: -5s;
+}
+
+.bg-blob-3 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -10s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(30px, -30px) scale(1.05);
+  }
+  50% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+  75% {
+    transform: translate(20px, 10px) scale(1.02);
+  }
+}
+
+/* 标题区域 */
+.hero-section {
+  text-align: center;
+  margin-bottom: 60px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+
+.title-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f5576c 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 18px;
+  color: #666;
+  max-width: 500px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 套餐网格 */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 套餐卡片 */
+.plan-card {
+  position: relative;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: cardFadeIn 0.6s ease-out backwards;
+  overflow: hidden;
+}
+
+.plan-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.plan-card:hover::before,
+.plan-card.hovered::before {
+  opacity: 1;
+}
+
+.plan-card:hover,
+.plan-card.hovered {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 卡片光效 */
+.card-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.plan-card:hover .card-glow,
+.plan-card.hovered .card-glow {
+  opacity: 0.15;
+}
+
+/* 卡片内容 */
+.card-content {
+  position: relative;
+  padding: 32px;
+  z-index: 1;
+}
+
+/* 图标 */
+.plan-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.plan-card:hover .plan-icon,
+.plan-card.hovered .plan-icon {
+  transform: scale(1.1) rotate(-5deg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* 套餐名称 */
+.plan-name {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+/* 描述 */
+.plan-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+  min-height: 40px;
+  line-height: 1.5;
+}
+
+/* 价格区域 */
+.price-section {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 24px;
+}
+
+.currency {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-right: 2px;
+}
+
+.price-value {
+  font-size: 48px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -2px;
+  line-height: 1;
+}
+
+.price-period {
+  font-size: 14px;
+  color: #999;
+  margin-left: 4px;
+}
+
+/* 特性列表 */
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 28px 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: #555;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.plan-card:hover .feature-item {
+  transform: translateX(4px);
+}
+
+.feature-icon {
+  color: #52c41a;
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+/* 订阅按钮 */
+.subscribe-btn {
+  width: 100%;
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.subscribe-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.1);
+}
+
+.subscribe-btn:active {
+  transform: translateY(0);
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #999;
+  font-size: 16px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 32px;
+  }
+
+  .hero-subtitle {
+    font-size: 16px;
+  }
+
+  .plans-grid {
+    grid-template-columns: 1fr;
+    padding: 0 10px;
+  }
+
+  .card-content {
+    padding: 24px;
+  }
+
+  .price-value {
+    font-size: 40px;
+  }
+
+  .bg-blob {
+    filter: blur(60px);
+    opacity: 0.3;
+  }
+
+  .bg-blob-1 {
+    width: 300px;
+    height: 300px;
+  }
+
+  .bg-blob-2 {
+    width: 250px;
+    height: 250px;
+  }
+
+  .bg-blob-3 {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .plan-card {
+    background: rgba(30, 30, 30, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .plan-name {
+    color: #fff;
+  }
+
+  .plan-description {
+    color: #aaa;
+  }
+
+  .currency,
+  .price-value {
+    color: #fff;
+  }
+
+  .price-period {
+    color: #888;
+  }
+
+  .feature-item {
+    color: #ccc;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .hero-subtitle {
+    color: #aaa;
+  }
+}
