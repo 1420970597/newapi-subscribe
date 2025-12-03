@@ -17,6 +17,7 @@ type Config struct {
 	NewAPIURL       string
 	NewAPIAdminUser string
 	NewAPIAdminPass string
+	NewAPIAdminID   string
 
 	// 易支付配置
 	EpayURL string
@@ -46,6 +47,7 @@ func Load() {
 		NewAPIURL:       getEnv("NEWAPI_URL", ""),
 		NewAPIAdminUser: getEnv("NEWAPI_ADMIN_USER", ""),
 		NewAPIAdminPass: getEnv("NEWAPI_ADMIN_PASS", ""),
+		NewAPIAdminID:   getEnv("NEWAPI_ADMIN_ID", ""),
 
 		EpayURL: getEnv("EPAY_URL", ""),
 		EpayPID: getEnv("EPAY_PID", ""),

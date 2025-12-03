@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 
 	"newapi-subscribe/internal/config"
@@ -17,6 +18,7 @@ import (
 // NewAPIClient new-api HTTP 客户端
 type NewAPIClient struct {
 	baseURL    string
+	adminID    string
 	httpClient *http.Client
 	cookies    []*http.Cookie
 }
@@ -49,8 +51,12 @@ type NewAPILog struct {
 // NewNewAPIClient 创建 new-api 客户端
 func NewNewAPIClient() *NewAPIClient {
 	jar, _ := cookiejar.New(nil)
+	baseURL := config.Cfg.NewAPIURL
+	// 移除末尾斜杠
+	baseURL = strings.TrimSuffix(baseURL, "/")
 	return &NewAPIClient{
-		baseURL: config.Cfg.NewAPIURL,
+		baseURL: baseURL,
+		adminID: config.Cfg.NewAPIAdminID,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 			Jar:     jar,
@@ -248,12 +254,16 @@ func (c *NewAPIClient) CreateUser(username, password, group string) (*NewAPIUser
 // GetGroups 获取分组列表（需要管理员权限）
 func (c *NewAPIClient) GetGroups() ([]string, error) {
 	if err := c.AdminLogin(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("管理员登录失败: %v", err)
 	}
 
-	req, _ := http.NewRequest("GET", c.baseURL+"/api/group", nil)
+	req, _ := http.NewRequest("GET", c.baseURL+"/api/group/", nil)
 	for _, cookie := range c.cookies {
 		req.AddCookie(cookie)
+	}
+	// 添加 New-Api-User header
+	if c.adminID != "" {
+		req.Header.Set("New-Api-User", c.adminID)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -262,18 +272,20 @@ func (c *NewAPIClient) GetGroups() ([]string, error) {
 	}
 	defer resp.Body.Close()
 
+	respBody, _ := io.ReadAll(resp.Body)
+
 	var result struct {
 		Success bool     `json:"success"`
 		Message string   `json:"message"`
 		Data    []string `json:"data"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("解析响应失败: %v, body: %s", err, string(respBody))
 	}
 
 	if !result.Success {
-		return nil, errors.New(result.Message)
+		return nil, fmt.Errorf("获取分组失败: %s", result.Message)
 	}
 
 	return result.Data, nil
