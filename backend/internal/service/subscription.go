@@ -1,7 +1,9 @@
 package service
 
 import (
+	"fmt"
 	"log"
+	"math/rand"
 	"time"
 
 	"newapi-subscribe/internal/model"
@@ -151,15 +153,29 @@ func CompleteOrder(order *model.Order, tradeNo string) error {
 	client := NewNewAPIClient()
 
 	if user.NewAPIBound != 1 {
+		// 生成随机用户名: 前缀_随机字符串
+		randomUsername := generateRandomUsername()
+		// 生成随机密码
+		randomPassword := generateRandomPassword()
+
 		// 创建新账号
-		newAPIUser, err := client.CreateUser(user.Username, "temp_password", plan.NewAPIGroup)
+		newAPIUser, err := client.CreateUser(randomUsername, randomPassword, plan.NewAPIGroup)
 		if err != nil {
 			log.Printf("创建 new-api 账号失败: %v", err)
-		} else {
+			// 尝试使用带时间戳的用户名再次创建
+			randomUsername = fmt.Sprintf("u_%d_%s", time.Now().Unix(), generateRandomString(4))
+			newAPIUser, err = client.CreateUser(randomUsername, randomPassword, plan.NewAPIGroup)
+			if err != nil {
+				log.Printf("重试创建 new-api 账号仍然失败: %v", err)
+			}
+		}
+
+		if newAPIUser != nil {
 			user.NewAPIUserID = newAPIUser.ID
 			user.NewAPIUsername = newAPIUser.Username
 			user.NewAPIBound = 1
 			model.DB.Save(&user)
+			log.Printf("为用户 %d 创建 new-api 账号: %s", user.ID, newAPIUser.Username)
 		}
 	}
 
@@ -220,16 +236,42 @@ func CompleteOrder(order *model.Order, tradeNo string) error {
 		model.DB.Create(&subscription)
 	}
 
-	// 设置 new-api 初始额度
+	// 设置 new-api 初始额度（重要：必须在创建订阅后设置）
 	if user.NewAPIBound == 1 {
 		newAPIUser, err := client.GetUser(user.NewAPIUserID)
 		if err == nil {
 			newAPIUser.Quota = plan.DailyQuota
 			newAPIUser.Group = plan.NewAPIGroup
-			client.UpdateUser(newAPIUser)
+			if err := client.UpdateUser(newAPIUser); err != nil {
+				log.Printf("设置用户 %d new-api 额度失败: %v", user.ID, err)
+			} else {
+				log.Printf("用户 %d new-api 额度已设置为 %d", user.ID, plan.DailyQuota)
+			}
+		} else {
+			log.Printf("获取用户 %d new-api 信息失败: %v", user.ID, err)
 		}
 	}
 
 	log.Printf("订单 %s 完成，用户 %d 订阅已激活", order.OrderNo, user.ID)
 	return nil
+}
+
+// generateRandomUsername 生成随机用户名
+func generateRandomUsername() string {
+	return fmt.Sprintf("sub_%s", generateRandomString(8))
+}
+
+// generateRandomPassword 生成随机密码
+func generateRandomPassword() string {
+	return generateRandomString(12)
+}
+
+// generateRandomString 生成指定长度的随机字符串
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+	return string(b)
 }

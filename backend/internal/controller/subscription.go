@@ -85,6 +85,17 @@ func PurchaseSubscription(c *gin.Context) {
 		periodDays = req.PeriodDays
 	}
 
+	// 检查是否已有相同套餐的活跃订阅
+	var existingSub model.Subscription
+	if err := model.DB.Where("user_id = ? AND plan_id = ? AND status = ?",
+		user.ID, plan.ID, model.SubscriptionStatusActive).First(&existingSub).Error; err == nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Success: false,
+			Message: "您已有该套餐的有效订阅，请选择续费或其他套餐",
+		})
+		return
+	}
+
 	// 处理 new-api 账号
 	client := service.NewNewAPIClient()
 	switch req.NewAPIAction {
@@ -139,10 +150,10 @@ func PurchaseSubscription(c *gin.Context) {
 		Status:     model.OrderStatusPending,
 	}
 
-	// 检查是否有活跃订阅（续费）
-	var existingSub model.Subscription
+	// 检查是否有其他活跃订阅（如果有则为续费/切换套餐）
+	var anyActiveSub model.Subscription
 	if err := model.DB.Where("user_id = ? AND status = ?", user.ID, model.SubscriptionStatusActive).
-		First(&existingSub).Error; err == nil {
+		First(&anyActiveSub).Error; err == nil {
 		order.OrderType = model.OrderTypeRenew
 	}
 
