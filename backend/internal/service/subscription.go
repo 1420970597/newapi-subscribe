@@ -167,13 +167,34 @@ func CompleteOrder(order *model.Order, tradeNo string) error {
 	var subscription model.Subscription
 	today := time.Now().Truncate(24 * time.Hour)
 
+	// 计算到期时间的辅助函数
+	calcEndDate := func(baseDate time.Time, periodDays int) time.Time {
+		if plan.PeriodType == model.PeriodTypeMonth {
+			// 按月订阅：计算月数
+			months := periodDays / 30
+			if months < 1 {
+				months = 1
+			}
+			return baseDate.AddDate(0, months, 0)
+		} else if plan.PeriodType == model.PeriodTypeWeek {
+			// 按周订阅：计算周数
+			weeks := periodDays / 7
+			if weeks < 1 {
+				weeks = 1
+			}
+			return baseDate.AddDate(0, 0, weeks*7)
+		}
+		// 按天或自定义
+		return baseDate.AddDate(0, 0, periodDays)
+	}
+
 	if order.OrderType == model.OrderTypeRenew {
 		// 续费：延长现有订阅
 		model.DB.Where("user_id = ? AND status = ?", user.ID, model.SubscriptionStatusActive).
 			First(&subscription)
 
 		if subscription.ID > 0 {
-			subscription.EndDate = subscription.EndDate.AddDate(0, 0, order.PeriodDays)
+			subscription.EndDate = calcEndDate(subscription.EndDate, order.PeriodDays)
 			model.DB.Save(&subscription)
 		}
 	} else {
@@ -188,7 +209,7 @@ func CompleteOrder(order *model.Order, tradeNo string) error {
 			PlanID:       plan.ID,
 			Status:       model.SubscriptionStatusActive,
 			StartDate:    today,
-			EndDate:      today.AddDate(0, 0, order.PeriodDays-1),
+			EndDate:      calcEndDate(today, order.PeriodDays),
 			TodayQuota:   plan.DailyQuota,
 			DailyQuota:   plan.DailyQuota,
 			CarryOver:    plan.CarryOver,

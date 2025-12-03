@@ -110,7 +110,7 @@ export default function Home() {
         {plans.map((plan, index) => (
           <div
             key={plan.id}
-            className={`plan-card ${hoveredPlan === plan.id ? 'hovered' : ''}`}
+            className={`plan-card ${hoveredPlan === plan.id ? 'hovered' : ''} ${index === 0 ? 'featured' : ''}`}
             onMouseEnter={() => setHoveredPlan(plan.id)}
             onMouseLeave={() => setHoveredPlan(null)}
             style={{

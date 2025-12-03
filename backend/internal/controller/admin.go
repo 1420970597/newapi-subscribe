@@ -31,11 +31,15 @@ func AdminGetUsers(c *gin.Context) {
 	query.Count(&total)
 	query.Order("id DESC").Offset(pagination.Offset()).Limit(pagination.PerPage).Find(&users)
 
-	// 获取每个用户的订阅状态
+	// 获取每个用户的订阅状态和今日用量
 	type UserWithSubscription struct {
 		model.User
-		Subscription *model.Subscription `json:"subscription"`
+		Subscription  *model.Subscription `json:"subscription"`
+		TodayUsed     int                 `json:"today_used"`
+		CurrentQuota  int                 `json:"current_quota"`
 	}
+
+	client := service.NewNewAPIClient()
 
 	result := make([]UserWithSubscription, len(users))
 	for i, u := range users {
@@ -45,6 +49,16 @@ func AdminGetUsers(c *gin.Context) {
 			Where("user_id = ? AND status = ?", u.ID, model.SubscriptionStatusActive).
 			First(&sub).Error; err == nil {
 			result[i].Subscription = &sub
+		}
+
+		// 获取绑定了 new-api 的用户的今日用量
+		if u.NewAPIBound == 1 {
+			if todayUsed, err := client.GetUserQuotaUsedToday(u.NewAPIUserID); err == nil {
+				result[i].TodayUsed = todayUsed
+			}
+			if newAPIUser, err := client.GetUser(u.NewAPIUserID); err == nil {
+				result[i].CurrentQuota = newAPIUser.Quota
+			}
 		}
 	}
 
@@ -537,5 +551,72 @@ func AdminCompleteOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, dto.Response{
 		Success: true,
 		Message: "补单成功",
+	})
+}
+
+// AdminGetUserTodayUsage 获取用户今日用量
+func AdminGetUserTodayUsage(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Success: false,
+			Message: "无效的用户 ID",
+		})
+		return
+	}
+
+	var user model.User
+	if err := model.DB.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, dto.Response{
+			Success: false,
+			Message: "用户不存在",
+		})
+		return
+	}
+
+	if user.NewAPIBound != 1 {
+		c.JSON(http.StatusOK, dto.Response{
+			Success: true,
+			Data: gin.H{
+				"today_used":    0,
+				"daily_quota":   0,
+				"current_quota": 0,
+				"message":       "用户未绑定 new-api 账号",
+			},
+		})
+		return
+	}
+
+	client := service.NewNewAPIClient()
+	todayUsed, err := client.GetUserQuotaUsedToday(user.NewAPIUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Success: false,
+			Message: "获取今日用量失败: " + err.Error(),
+		})
+		return
+	}
+
+	// 获取当前订阅信息
+	var subscription model.Subscription
+	var dailyQuota int
+	if err := model.DB.Where("user_id = ? AND status = ?", user.ID, model.SubscriptionStatusActive).
+		First(&subscription).Error; err == nil {
+		dailyQuota = subscription.DailyQuota
+	}
+
+	// 获取当前余额
+	var currentQuota int
+	if newAPIUser, err := client.GetUser(user.NewAPIUserID); err == nil {
+		currentQuota = newAPIUser.Quota
+	}
+
+	c.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Data: gin.H{
+			"today_used":    todayUsed,
+			"daily_quota":   dailyQuota,
+			"current_quota": currentQuota,
+		},
 	})
 }

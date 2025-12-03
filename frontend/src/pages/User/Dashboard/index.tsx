@@ -11,6 +11,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [subscription, setSubscription] = useState<any>(null)
   const [currentQuota, setCurrentQuota] = useState(0)
+  const [todayUsage, setTodayUsage] = useState<any>(null)
   const [purchaseModal, setPurchaseModal] = useState(false)
   const [plans, setPlans] = useState<any[]>([])
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
@@ -35,6 +36,11 @@ export default function Dashboard() {
       if (res.success && res.data) {
         setSubscription(res.data.subscription)
         setCurrentQuota(res.data.current_quota)
+      }
+      // 加载今日用量
+      const usageRes: any = await subscriptionApi.todayUsage()
+      if (usageRes.success) {
+        setTodayUsage(usageRes.data)
       }
     } catch (error) {
       console.error(error)
@@ -136,6 +142,15 @@ export default function Dashboard() {
               <Statistic title="每日额度" value={subscription.daily_quota} />
               <Statistic title="结转额度" value={subscription.carried_quota} style={{ marginTop: 16 }} />
               <Statistic title="模型分组" value={subscription.newapi_group} style={{ marginTop: 16 }} />
+              {todayUsage && (
+                <Statistic
+                  title="今日已用"
+                  value={todayUsage.today_used || 0}
+                  suffix={`/ ${todayUsage.daily_quota || subscription.daily_quota}`}
+                  style={{ marginTop: 16 }}
+                  valueStyle={{ color: (todayUsage.today_used || 0) > (todayUsage.daily_quota || subscription.daily_quota) * 0.8 ? '#cf1322' : '#3f8600' }}
+                />
+              )}
             </Card>
           </Col>
         </Row>

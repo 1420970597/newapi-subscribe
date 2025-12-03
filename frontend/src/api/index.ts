@@ -47,6 +47,7 @@ export const subscriptionApi = {
   renew: (data: { period_days: number }) => api.post('/subscriptions/renew', data),
   usage: (params?: any) => api.get('/subscriptions/usage', { params }),
   usageDetail: (params?: any) => api.get('/subscriptions/usage/detail', { params }),
+  todayUsage: () => api.get('/subscriptions/usage/today'),
 }
 
 // 订单
@@ -69,6 +70,7 @@ export const adminApi = {
   getUsers: (params?: any) => api.get('/admin/users', { params }),
   getUser: (id: number) => api.get(`/admin/users/${id}`),
   getUserUsage: (id: number, params?: any) => api.get(`/admin/users/${id}/usage`, { params }),
+  getUserTodayUsage: (id: number) => api.get(`/admin/users/${id}/usage/today`),
   updateUser: (id: number, data: any) => api.put(`/admin/users/${id}`, data),
 
   // 订阅

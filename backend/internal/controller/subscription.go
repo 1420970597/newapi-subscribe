@@ -291,6 +291,52 @@ func GetUsageDetail(c *gin.Context) {
 	})
 }
 
+// GetTodayUsage 获取当日用量
+func GetTodayUsage(c *gin.Context) {
+	user := middleware.GetCurrentUser(c)
+
+	if user.NewAPIBound != 1 {
+		c.JSON(http.StatusBadRequest, dto.Response{
+			Success: false,
+			Message: "请先绑定 new-api 账号",
+		})
+		return
+	}
+
+	client := service.NewNewAPIClient()
+	todayUsed, err := client.GetUserQuotaUsedToday(user.NewAPIUserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, dto.Response{
+			Success: false,
+			Message: "获取今日用量失败: " + err.Error(),
+		})
+		return
+	}
+
+	// 获取当前订阅信息
+	var subscription model.Subscription
+	var dailyQuota int
+	if err := model.DB.Where("user_id = ? AND status = ?", user.ID, model.SubscriptionStatusActive).
+		First(&subscription).Error; err == nil {
+		dailyQuota = subscription.DailyQuota
+	}
+
+	// 获取当前余额
+	var currentQuota int
+	if newAPIUser, err := client.GetUser(user.NewAPIUserID); err == nil {
+		currentQuota = newAPIUser.Quota
+	}
+
+	c.JSON(http.StatusOK, dto.Response{
+		Success: true,
+		Data: gin.H{
+			"today_used":    todayUsed,
+			"daily_quota":   dailyQuota,
+			"current_quota": currentQuota,
+		},
+	})
+}
+
 func generateOrderNo(userID uint) string {
 	return fmt.Sprintf("SUB%d%d", userID, time.Now().UnixNano())
 }

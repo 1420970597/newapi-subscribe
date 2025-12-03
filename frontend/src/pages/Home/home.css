@@ -120,11 +120,19 @@
 /* 套餐网格 */
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 30px;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 20px;
+  justify-content: center;
+}
+
+/* 当只有1-2个卡片时限制最大宽度 */
+@media (min-width: 992px) {
+  .plans-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 380px));
+  }
 }
 
 /* 套餐卡片 */
@@ -141,6 +149,29 @@
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   animation: cardFadeIn 0.6s ease-out backwards;
   overflow: hidden;
+}
+
+/* 推荐徽章 */
+.plan-card.featured::after {
+  content: '推荐';
+  position: absolute;
+  top: 16px;
+  right: -28px;
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 32px;
+  transform: rotate(45deg);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.plan-card.featured {
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  box-shadow:
+    0 8px 32px rgba(102, 126, 234, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 .plan-card::before {
@@ -342,7 +373,8 @@
 
   .plans-grid {
     grid-template-columns: 1fr;
-    padding: 0 10px;
+    padding: 0 16px;
+    gap: 20px;
   }
 
   .card-content {
@@ -351,6 +383,16 @@
 
   .price-value {
     font-size: 40px;
+  }
+
+  .plan-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 24px;
+  }
+
+  .plan-name {
+    font-size: 20px;
   }
 
   .bg-blob {
@@ -371,6 +413,22 @@
   .bg-blob-3 {
     width: 200px;
     height: 200px;
+  }
+
+  /* 移动端推荐徽章调整 */
+  .plan-card.featured::after {
+    top: 12px;
+    right: -32px;
+    font-size: 11px;
+    padding: 3px 28px;
+  }
+}
+
+/* 平板适配 */
+@media (min-width: 769px) and (max-width: 991px) {
+  .plans-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
   }
 }
 

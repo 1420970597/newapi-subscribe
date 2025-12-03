@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Table, Card, Input, Tag, Button, Drawer, Descriptions, Spin } from 'antd'
+import { Table, Card, Input, Tag, Button, Drawer, Descriptions, Spin, Statistic, Row, Col } from 'antd'
 import dayjs from 'dayjs'
 import { adminApi } from '../../../api'
 
@@ -10,6 +10,7 @@ export default function AdminUsers() {
   const [keyword, setKeyword] = useState('')
   const [drawerVisible, setDrawerVisible] = useState(false)
   const [userDetail, setUserDetail] = useState<any>(null)
+  const [todayUsage, setTodayUsage] = useState<any>(null)
   const [detailLoading, setDetailLoading] = useState(false)
 
   useEffect(() => {
@@ -38,10 +39,17 @@ export default function AdminUsers() {
   const handleViewUser = async (user: any) => {
     setDrawerVisible(true)
     setDetailLoading(true)
+    setTodayUsage(null)
     try {
-      const res: any = await adminApi.getUser(user.id)
-      if (res.success) {
-        setUserDetail(res.data)
+      const [detailRes, usageRes]: any[] = await Promise.all([
+        adminApi.getUser(user.id),
+        adminApi.getUserTodayUsage(user.id)
+      ])
+      if (detailRes.success) {
+        setUserDetail(detailRes.data)
+      }
+      if (usageRes.success) {
+        setTodayUsage(usageRes.data)
       }
     } catch (error) {
       console.error(error)
@@ -53,7 +61,7 @@ export default function AdminUsers() {
   const columns = [
     { title: 'ID', dataIndex: 'id', key: 'id', width: 60 },
     { title: '用户名', dataIndex: 'username', key: 'username' },
-    { title: '邮箱', dataIndex: 'email', key: 'email' },
+    { title: '邮箱', dataIndex: 'email', key: 'email', ellipsis: true },
     {
       title: '订阅状态',
       key: 'subscription',
@@ -62,6 +70,30 @@ export default function AdminUsers() {
       ) : (
         <Tag>无订阅</Tag>
       ),
+    },
+    {
+      title: '今日用量',
+      key: 'today_used',
+      width: 120,
+      render: (_: any, record: any) => {
+        if (!record.newapi_bound) return <span style={{ color: '#999' }}>-</span>
+        const dailyQuota = record.subscription?.daily_quota || 0
+        const todayUsed = record.today_used || 0
+        const isOverUsed = dailyQuota > 0 && todayUsed > dailyQuota * 0.8
+        return (
+          <span style={{ color: isOverUsed ? '#cf1322' : '#3f8600' }}>
+            {todayUsed.toLocaleString()}
+            {dailyQuota > 0 && <span style={{ color: '#999' }}> / {dailyQuota.toLocaleString()}</span>}
+          </span>
+        )
+      },
+    },
+    {
+      title: '剩余额度',
+      dataIndex: 'current_quota',
+      key: 'current_quota',
+      width: 100,
+      render: (quota: number, record: any) => record.newapi_bound ? quota?.toLocaleString() || 0 : <span style={{ color: '#999' }}>-</span>,
     },
     {
       title: 'new-api',
@@ -76,14 +108,16 @@ export default function AdminUsers() {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
+      width: 80,
       render: (status: number) => (
         <Tag color={status === 1 ? 'green' : 'red'}>{status === 1 ? '启用' : '禁用'}</Tag>
       ),
     },
-    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', render: (time: string) => dayjs(time).format('YYYY-MM-DD') },
+    { title: '创建时间', dataIndex: 'created_at', key: 'created_at', width: 110, render: (time: string) => dayjs(time).format('YYYY-MM-DD') },
     {
       title: '操作',
       key: 'action',
+      width: 80,
       render: (_: any, record: any) => (
         <Button type="link" onClick={() => handleViewUser(record)}>详情</Button>
       ),
@@ -107,6 +141,7 @@ export default function AdminUsers() {
           columns={columns}
           dataSource={users}
           loading={loading}
+          scroll={{ x: 1100 }}
           pagination={{
             ...pagination,
             onChange: (page) => setPagination(prev => ({ ...prev, current: page })),
@@ -131,6 +166,27 @@ export default function AdminUsers() {
               <Descriptions.Item label="new-api 账号">{userDetail.user?.newapi_username || '-'}</Descriptions.Item>
               <Descriptions.Item label="当前余额">{userDetail.current_quota}</Descriptions.Item>
             </Descriptions>
+
+            {todayUsage && !todayUsage.message && (
+              <>
+                <h4 style={{ marginTop: 24, marginBottom: 16 }}>今日用量</h4>
+                <Row gutter={16}>
+                  <Col span={8}>
+                    <Statistic
+                      title="今日已用"
+                      value={todayUsage.today_used || 0}
+                      valueStyle={{ color: (todayUsage.today_used || 0) > (todayUsage.daily_quota || 0) * 0.8 ? '#cf1322' : '#3f8600' }}
+                    />
+                  </Col>
+                  <Col span={8}>
+                    <Statistic title="每日额度" value={todayUsage.daily_quota || 0} />
+                  </Col>
+                  <Col span={8}>
+                    <Statistic title="剩余额度" value={todayUsage.current_quota || 0} />
+                  </Col>
+                </Row>
+              </>
+            )}
 
             {userDetail.subscription && (
               <>

@@ -42,6 +42,7 @@ func SetupRouter() *gin.Engine {
 			subscriptions.POST("/renew", controller.RenewSubscription)
 			subscriptions.GET("/usage", controller.GetUsageLogs)
 			subscriptions.GET("/usage/detail", controller.GetUsageDetail)
+			subscriptions.GET("/usage/today", controller.GetTodayUsage)
 		}
 
 		// 订单接口
@@ -71,6 +72,7 @@ func SetupRouter() *gin.Engine {
 			admin.GET("/users", controller.AdminGetUsers)
 			admin.GET("/users/:id", controller.AdminGetUser)
 			admin.GET("/users/:id/usage", controller.AdminGetUserUsage)
+			admin.GET("/users/:id/usage/today", controller.AdminGetUserTodayUsage)
 			admin.PUT("/users/:id", controller.AdminUpdateUser)
 
 			// 订阅管理
