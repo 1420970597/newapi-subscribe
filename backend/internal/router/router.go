@@ -97,7 +97,8 @@ func SetupRouter() *gin.Engine {
 	}
 
 	// 静态文件（前端）
-	r.Static("/static", "./static")
+	r.Static("/assets", "./static/assets")
+	r.StaticFile("/vite.svg", "./static/vite.svg")
 	r.NoRoute(func(c *gin.Context) {
 		c.File("./static/index.html")
 	})
